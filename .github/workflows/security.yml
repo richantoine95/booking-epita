@@ -2,36 +2,39 @@ name: Daily Security Pipeline
 
 on:
   schedule:
-    - cron: '0 1 * * *'  # tous les jours à 01h00 UTC
-  workflow_dispatch:     # pour lancer manuellement
+    - cron: '0 2 * * *'  # Tous les jours à 2h UTC
+  workflow_dispatch:     # Permet un déclenchement manuel
 
 jobs:
   dependencies-analysis:
+    name: Dependencies Analysis
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
       - name: Run OSV Scanner
         uses: google/osv-scanner-action@v1
 
-      - name: Upload OSV report
+      - name: Upload SARIF results
         uses: github/codeql-action/upload-sarif@v2
         with:
-          sarif_file: osv.sarif
+          sarif_file: results.sarif
 
-  source-code-analysis:
+  sourcecode-analysis:
+    name: Source Code Analysis
     runs-on: ubuntu-latest
     container:
       image: returntocorp/semgrep
-
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Run Semgrep (Java rules)
-        run: semgrep --config p/java --sarif -o semgrep.sarif
+      - name: Run Semgrep (Java ruleset)
+        run: semgrep --config=p/java --sarif --output=results.sarif .
 
-      - name: Upload Semgrep report
+      - name: Upload SARIF results
         uses: github/codeql-action/upload-sarif@v2
         with:
-          sarif_file: semgrep.sarif
+          sarif_file: results.sarif
 
